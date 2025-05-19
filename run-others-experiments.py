@@ -5,7 +5,15 @@ import link_prediction_scores as lp
 import pickle, json
 import os
 import tensorflow as tf
+import numpy as np  # 这里需要导入 numpy，因为代码里使用了 np 相关的类
 
+class NumpyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        elif isinstance(obj, np.generic):
+            return obj.item()
+        return super(NumpyEncoder, self).default(obj)
 
 NUM_REPEATS = 1        # 迭代次数
 RANDOM_SEED = 0        # 随机种子
@@ -48,8 +56,8 @@ for network in NetWorks:
 
             # 在当前网络上运行所有链接预测方法，返回结果
             network_results[experiment_name] = lp.calculate_all_scores(network_adj, features_matrix=None,
-                                                                        directed=False, \
-                                                                        test_frac=test_frac, val_frac=val_frac, \
+                                                                        directed=False,
+                                                                        test_frac=test_frac, val_frac=val_frac,
                                                                         random_state=RANDOM_SEED, verbose=2,
                                                                         train_test_split_file=train_test_split_file,
                                                                         tf_dtype=tf.float16)
@@ -57,8 +65,8 @@ for network in NetWorks:
             # 每次遍历保存实验结果
             # json文件
             with open(network_results_dir, 'w') as fp:
-                json.dump(network_results, fp, indent=4)
+                json.dump(network_results, fp, indent=4, cls=NumpyEncoder)
 
         # 保存最终实验结果
         with open(network_results_dir, 'w') as fp:
-            json.dump(network_results, fp, indent=4)
+            json.dump(network_results, fp, indent=4, cls=NumpyEncoder)
